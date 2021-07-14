@@ -1,4 +1,13 @@
-name = "minfill"
-uuid = "7d6e6d94-68dd-4e24-85d8-dc42859fd593"
-authors = ["Oli Legg <oliglegg@hotmail.co.uk>"]
+name = "VertexEliminationOrder"
+uuid = "5497cd73-f573-4752-8d9a-e12e8f66dda6"
+authors = ["Oli Legg <oliglegg@hotmail.co.uk> and contributors"]
 version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
