@@ -51,7 +51,6 @@ function min_fill(g::LG.AbstractGraph)
 
         x = nVertices + 1 - i
         if removal < x
-            nums[x] = removal
             nums[removal] = x
         end
 
@@ -70,12 +69,11 @@ function min_width(g::LG.AbstractGraph)
     treeWidth = 0
 
     for i = 1:nVertices
-        removal = argmin(map(v -> LG.degree(g,v), LG.vertices(g)))
+        removal = argmin(LG.degree(g))
         sorted[i] = nums[removal]
 
         x = nVertices + 1 - i
         if removal < x
-            nums[x] = removal
             nums[removal] = x
         end
 
