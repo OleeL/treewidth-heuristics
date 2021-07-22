@@ -8,13 +8,9 @@ export min_fill, min_width
 @inline function joinVerts!(g::LG.AbstractGraph, v::Int)
     nb = LG.neighbors(g, v)
     numberOfNeighbors = length(nb)
-    requireChange = false
     for i = 1:numberOfNeighbors-1
         for j = i+1:numberOfNeighbors
-            if !LG.has_edge(g, nb[i], nb[j])
-                LG.add_edge!(g, nb[i], nb[j])
-                requireChange = true
-            end
+            LG.add_edge!(g, nb[i], nb[j])
         end
     end
 end
@@ -83,4 +79,43 @@ function min_width(g::LG.AbstractGraph)
     end
 
     (sorted, treeWidth)
+end
+
+function branch_bound(g::LG.AbstractGraph)
+    G = deepcopy(g)
+    # best_order, ub = min_width(G)
+    best_order = Int[]
+    ub = 10000
+    x = Int[]
+    println(best_order, ub)
+    nums = genNumberList(LG.nv(g))
+    dfs(g, x, 0, ub, best_order, nums)
+end
+
+function dfs(g::LG.AbstractGraph, x::Vector{Int}, e_width::Int, ub::Int, best_order::Vector{Int}, nums::Vector{Int})
+    nVertices = LG.nv(g)
+    if nVertices < 2
+        if e_width < ub
+            return (e_width, x)
+        else
+            return (ub, best_order)
+        end
+    end
+
+    for v in LG.vertices(g)
+        # Creating copies & refs
+        l_graph = deepcopy(g)
+        x_new = [x; nums[v]]
+
+        # Connecting edges
+        joinVerts!(l_graph, v)
+        e_width = max(e_width, LG.degree(g, v))
+        LG.rem_vertex!(l_graph, v)
+        nums[v] = nums[nVertices]
+        
+        if e_width < ub
+            return dfs(l_graph, x_new, e_width, ub, best_order, nums)
+        end
+    end
+    (ub, best_order)
 end

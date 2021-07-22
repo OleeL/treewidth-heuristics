@@ -14,7 +14,7 @@ function graph_from_gr(filename::String)::LG.SimpleGraph
 
     # Add an edge to the graph for every other line in the file.
     for line in lines[2:end]
-        src, dst = parse.(Int, split(line, ' '))
+        src, dst = parse.(Int32, split(line, ' '))
         LG.add_edge!(G, src, dst)
     end
 
@@ -24,6 +24,7 @@ end
 # Main
 graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/test.gr"
 G = graph_from_gr(graph_file)
+G = LG.smallgraph("house")
 g = copy(G)
 GP.gplot(g)
 # draw(PNG("graph.png", 800, 600), gplot(g, edgestrokec = colorant"black"))

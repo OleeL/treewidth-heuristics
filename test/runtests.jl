@@ -1,6 +1,10 @@
 include(joinpath(pwd(), "src", "VertexEliminationOrder.jl"))
+include(joinpath(pwd(), "src", "main.jl"))
 
-import Test, LightGraphs as LG
+import Test
+import LightGraphs as LG
+import GraphPlot as GP
+import BenchmarkTools as BT
 
 # Testing Heuristics
 Test.@testset "VertexEliminationOrder.jl" begin
@@ -17,4 +21,16 @@ Test.@testset "VertexEliminationOrder.jl" begin
     g = copy(G)
     @BT.time mw = min_width(g)
     Test.@test LG.nv(G) == length(mw[1])
+end
+
+# Testing DFS
+Test.@testset "DFS" begin
+    # Set up
+    graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/rectangular_4x4_1-16-1_0.gr"
+    G = graph_from_gr(graph_file)
+
+    # min fill test
+    @BT.time r = branch_bound(G)
+    println(r)
+    Test.@test r !== nothing
 end
