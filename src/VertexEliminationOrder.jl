@@ -93,10 +93,11 @@ function branch_bound(g::LG.AbstractGraph)
 end
 
 function dfs(g::LG.AbstractGraph, x::Vector{Int}, e_width::Int, ub::Int, best_order::Vector{Int}, nums::Vector{Int})
+    new_nums = copy(nums)
     nVertices = LG.nv(g)
     if nVertices < 2
         if e_width < ub
-            return (e_width, x)
+            return (e_width, [x; new_nums[1]])
         else
             return (ub, best_order)
         end
@@ -105,16 +106,16 @@ function dfs(g::LG.AbstractGraph, x::Vector{Int}, e_width::Int, ub::Int, best_or
     for v in LG.vertices(g)
         # Creating copies & refs
         l_graph = deepcopy(g)
-        x_new = [x; nums[v]]
+        x_new = [x; new_nums[v]]
 
         # Connecting edges
         joinVerts!(l_graph, v)
         e_width = max(e_width, LG.degree(g, v))
         LG.rem_vertex!(l_graph, v)
-        nums[v] = nums[nVertices]
+        new_nums[v] = new_nums[nVertices]
         
         if e_width < ub
-            return dfs(l_graph, x_new, e_width, ub, best_order, nums)
+            ub, best_order = dfs(l_graph, x_new, e_width, ub, best_order, new_nums)
         end
     end
     (ub, best_order)
