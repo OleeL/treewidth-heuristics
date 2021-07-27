@@ -1,122 +1,42 @@
+module VertexEliminationOrder
+
+include(joinpath(pwd(), "src", "Heuristics.jl"))
+include(joinpath(pwd(), "src", "DFS_BB.jl"))
+
+export graph_from_gr, run
+
+import BenchmarkTools as BT
 import LightGraphs as LG
+import GraphPlot as GP
 
-export min_fill, min_width
+function graph_from_gr(filename::String)::LG.SimpleGraph
+    lines = readlines(filename)
 
-# Helper functions
+    # Create a Graph with the correct number of vertices.
+    num_vertices, num_edges = parse.(Int, split(lines[1], ' ')[3:end])
+    G = LG.SimpleGraph(num_vertices)
 
-# joins vertices together if they're already neighbors
-@inline function joinVerts!(g::LG.AbstractGraph, v::Int)
-    nb = LG.neighbors(g, v)
-    numberOfNeighbors = length(nb)
-    for i = 1:numberOfNeighbors-1
-        for j = i+1:numberOfNeighbors
-            LG.add_edge!(g, nb[i], nb[j])
-        end
+    # Add an edge to the graph for every other line in the file.
+    for line in lines[2:end]
+        src, dst = parse.(Int32, split(line, ' '))
+        LG.add_edge!(G, src, dst)
     end
+
+    G
 end
 
-# num of edges added if vertex removed
-@inline function countEliminatedEdges(g::LG.AbstractGraph, v::Int)
-    e = 0
-    nb = LG.neighbors(g, v)
-    numberOfNeighbors = length(nb)
-    for i = 1:(numberOfNeighbors-1)
-        for j = (i+1):numberOfNeighbors
-            if !LG.has_edge(g, nb[i], nb[j])
-                e+=1
-            end
-        end
-    end
-    e
+function run()
+    # Main
+    graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/test.gr"
+    G = graph_from_gr(graph_file)
+    G = LG.smallgraph("house")
+    g = copy(G)
+    GP.gplot(g)
+    # draw(PNG("graph.png", 800, 600), gplot(g, edgestrokec = colorant"black"))
+    
+    @BT.time tw = min_fill(g)
+    g = copy(G)
+    @BT.time tw = min_width(g)
 end
 
-
-@inline genNumberList(n::Int) = [i for i = 1:n]
-
-# Heuristics Below
-
-function min_fill(g::LG.AbstractGraph)
-    nVertices = LG.nv(g)
-    sorted = zeros(Int, nVertices)
-    nums = genNumberList(nVertices)
-    treeWidth = 0
-
-    for i = 1:nVertices
-        removal = argmin(map(v -> countEliminatedEdges(g,v), LG.vertices(g)))
-        sorted[i] = nums[removal]
-
-        x = nVertices + 1 - i
-        if removal < x
-            nums[removal] = x
-        end
-
-        treeWidth = max(treeWidth, LG.degree(g, removal))
-        joinVerts!(g, removal)
-        LG.rem_vertex!(g, removal)
-    end
-
-    (sorted, treeWidth)
-end
-
-function min_width(g::LG.AbstractGraph)
-    nVertices = LG.nv(g)
-    sorted = zeros(Int, nVertices)
-    nums = genNumberList(nVertices)
-    treeWidth = 0
-
-    for i = 1:nVertices
-        removal = argmin(LG.degree(g))
-        sorted[i] = nums[removal]
-
-        x = nVertices + 1 - i
-        if removal < x
-            nums[removal] = x
-        end
-
-        treeWidth = max(treeWidth, LG.degree(g, removal))
-        joinVerts!(g, removal)
-        LG.rem_vertex!(g, removal)
-    end
-
-    (sorted, treeWidth)
-end
-
-function branch_bound(g::LG.AbstractGraph)
-    G = deepcopy(g)
-    # best_order, ub = min_width(G)
-    best_order = Int[]
-    ub = 10000
-    x = Int[]
-    println(best_order, ub)
-    nums = genNumberList(LG.nv(g))
-    dfs(g, x, 0, ub, best_order, nums)
-end
-
-function dfs(g::LG.AbstractGraph, x::Vector{Int}, e_width::Int, ub::Int, best_order::Vector{Int}, nums::Vector{Int})
-    new_nums = copy(nums)
-    nVertices = LG.nv(g)
-    if nVertices < 2
-        if e_width < ub
-            return (e_width, [x; new_nums[1]])
-        else
-            return (ub, best_order)
-        end
-    end
-
-    for v in LG.vertices(g)
-        # Creating copies & refs
-        l_graph = deepcopy(g)
-        x_new = [x; new_nums[v]]
-
-        # Connecting edges
-        joinVerts!(l_graph, v)
-        e_width = max(e_width, LG.degree(g, v))
-        LG.rem_vertex!(l_graph, v)
-        new_nums[v] = new_nums[nVertices]
-        
-        if e_width < ub
-            ub, best_order = dfs(l_graph, x_new, e_width, ub, best_order, new_nums)
-        end
-    end
-    (ub, best_order)
 end
