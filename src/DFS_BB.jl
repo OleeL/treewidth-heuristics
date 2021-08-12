@@ -1,4 +1,6 @@
 import LightGraphs as LG
+import Dates
+using Printf 
 
 mutable struct GraphData
     g::LG.AbstractGraph
@@ -6,6 +8,8 @@ mutable struct GraphData
     ub::Int
     best_order::Vector{Int}
     nums::Vector{Int}
+    finishTime::Float64 # epoch
+    numNodes::Int
 end
 
 function branch_bound(g::LG.AbstractGraph)
@@ -16,34 +20,45 @@ function branch_bound(g::LG.AbstractGraph)
     x = Int[]
     println(best_order, ub)
     nums = genNumberList(LG.nv(g))
-    dfs(GraphData(g, 0, ub, best_order, nums), x)
+
+    
+    duration = 1 # Time in seconds seconds
+    finishTime = Dates.datetime2unix(Dates.now()) + duration
+    
+    dfs(GraphData(G, 0, ub, best_order, nums, finishTime, 1), x)
 end
 
 function dfs(gd::GraphData, x::Vector{Int})
-    new_nums = copy(gd.nums)
     nVertices = LG.nv(gd.g)
-    if nVertices < 2
-        if gd.e_width < gd.ub
-            return (gd.e_width, [gd; gd.nums[1]])
-        else
-            return (gd.ub, gd.best_order)
-        end
+    
+    if Dates.datetime2unix(Dates.now()) >= gd.finishTime
+        println("timeout - terminating")
+        return (gd.e_width, [x; gd.nums[1]], 1)
     end
 
+    if nVertices < 2
+        return gd.e_width < gd.ub ? (gd.e_width, [x; gd.nums[1]], 1) : (gd.ub, gd.best_order, 1)
+    end
+    
     for v in LG.vertices(gd.g)
         # Creating copies & refs
         l_graph = copy(gd.g)
-        x_new = [x; new_nums[v]]
-
+        x_new = [x; gd.nums[v]]
+        # println(x_new)
+        
         # Connecting edges
         joinVerts!(l_graph, v)
         gd.e_width = max(gd.e_width, LG.degree(gd.g, v))
         LG.rem_vertex!(l_graph, v)
-        new_nums[v] = new_nums[nVertices]
+        nums_old = copy(gd.nums)
+        nums_old[v] = nums_old[nVertices]
         
         if gd.e_width < gd.ub
-            gd.ub, gd.best_order = dfs(gd, x_new)
+            gd_new = GraphData(l_graph, gd.e_width, gd.ub, gd.best_order, nums_old, gd.finishTime, 1)
+            gd.ub, gd.best_order, n = dfs(gd_new, x_new)
+            gd.numNodes += n
         end
     end
-    (gd.ub, gd.best_order)
+
+    (gd.ub, gd.best_order, gd.numNodes)
 end
