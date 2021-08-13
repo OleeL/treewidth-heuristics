@@ -27,9 +27,9 @@ end
 # Testing DFS
 Test.@testset "DFS" begin
     # Set up
-
-    # graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/rectangular_4x4_1-16-1_0.gr"
-    G = VertexEliminationOrder.graph_from_gr("circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/test.gr")
+    graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/rectangular_4x4_1-16-1_0.gr"
+    # graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/test.gr"
+    G = VertexEliminationOrder.graph_from_gr(graph_file)
 
     # min fill test
     @BT.time r = branch_bound(G)
