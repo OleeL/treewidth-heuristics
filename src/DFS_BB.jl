@@ -1,5 +1,4 @@
 import LightGraphs as LG
-import Dates
 using Printf 
 
 mutable struct GraphData
@@ -23,7 +22,7 @@ function branch_bound(g::LG.AbstractGraph)
 
     
     duration = 1 # Time in seconds seconds
-    finishTime = Dates.datetime2unix(Dates.now()) + duration
+    finishTime = time() + duration
     
     dfs(GraphData(G, 0, ub, best_order, nums, finishTime, 1), x)
 end
@@ -31,7 +30,7 @@ end
 function dfs(gd::GraphData, x::Vector{Int})
     nVertices = LG.nv(gd.g)
     
-    if Dates.datetime2unix(Dates.now()) >= gd.finishTime
+    if time() >= gd.finishTime
         println("timeout - terminating")
         return (gd.e_width, [x; gd.nums[1]], 1)
     end
