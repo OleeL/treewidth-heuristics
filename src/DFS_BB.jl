@@ -1,5 +1,5 @@
 import LightGraphs as LG
-using Printf 
+import Random
 
 mutable struct GraphData
     g::LG.AbstractGraph
@@ -11,7 +11,7 @@ mutable struct GraphData
     numNodes::Int
 end
 
-function branch_bound(g::LG.AbstractGraph)
+function branch_bound(g::LG.AbstractGraph, duration::Int)
     G = deepcopy(g)
     # best_order, ub = min_width(G)
     best_order = Int[]
@@ -19,9 +19,6 @@ function branch_bound(g::LG.AbstractGraph)
     x = Int[]
     println(best_order, ub)
     nums = genNumberList(LG.nv(g))
-
-    
-    duration = 1 # Time in seconds seconds
     finishTime = time() + duration
     
     dfs(GraphData(G, 0, ub, best_order, nums, finishTime, 1), x)
@@ -39,11 +36,11 @@ function dfs(gd::GraphData, x::Vector{Int})
         return gd.e_width < gd.ub ? (gd.e_width, [x; gd.nums[1]], 1) : (gd.ub, gd.best_order, 1)
     end
     
-    for v in LG.vertices(gd.g)
+
+    for v in Random.shuffle(LG.vertices(gd.g))
         # Creating copies & refs
         l_graph = copy(gd.g)
         x_new = [x; gd.nums[v]]
-        # println(x_new)
         
         # Connecting edges
         joinVerts!(l_graph, v)
