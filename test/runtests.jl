@@ -32,7 +32,9 @@ Test.@testset "DFS" begin
     G = VertexEliminationOrder.graph_from_gr(graph_file)
 
     # min fill test
-    @BT.time r = branch_bound(G)
+    seconds = 10
+    println("Max alg duration: ", seconds, " seconds")
+    @BT.time r = branch_bound(G, seconds)
     println(r)
     Test.@test r !== nothing
 end 
