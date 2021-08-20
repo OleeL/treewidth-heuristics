@@ -52,7 +52,7 @@ function dfs(gd::GraphData, x::Vector{Int})
         return (gd.e_width, [x; gd.nums[1]], 1)
     end
 
-    if nVertices < 2
+    if nVertices < gd.ewidth
         return gd.e_width < gd.ub ? (gd.e_width, [x; gd.nums[1]], 1) : (gd.ub, gd.best_order, 1)
     end
 
@@ -62,6 +62,9 @@ function dfs(gd::GraphData, x::Vector{Int})
         Threads.@threads for v in Random.shuffle(LG.vertices(gd.g))
             process(gd, x, v, nVertices)
         end
+
+        # Pick out best order here
+        # <...>
     else
         for v in Random.shuffle(LG.vertices(gd.g))
             process(gd, x, v, nVertices)
