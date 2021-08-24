@@ -1,17 +1,26 @@
 import LightGraphs as LG
 
-export min_fill, min_width
+export min_fill, min_width, GraphModification
 # Helper functions
 
+struct GraphModification
+    nb::Vector{Int}
+    addedEdges::Vector{Tuple{Int, Int}}
+end
+
 # joins vertices together if they're already neighbors
-@inline function joinVerts!(g::LG.AbstractGraph, v::Int)
+@inline function joinVerts!(g::LG.AbstractGraph, v::Int)::GraphModification
     nb = LG.neighbors(g, v)
     numberOfNeighbors = length(nb)
+    addedEdges = []
     for i = 1:numberOfNeighbors-1
         for j = i+1:numberOfNeighbors
-            LG.add_edge!(g, nb[i], nb[j])
+            if LG.add_edge!(g, nb[i], nb[j]) 
+                push!(addedEdges, (nb[i], nb[j]))
+            end
         end
     end
+    GraphModification(nb, addedEdges)
 end
 
 # num of edges added if vertex removed
