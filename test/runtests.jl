@@ -6,6 +6,7 @@ import Test
 import LightGraphs as LG
 import GraphPlot as GP
 import BenchmarkTools as BT
+import ProfileView as PV
 
 # Testing Heuristics
 Test.@testset "VertexEliminationOrder.jl" begin
@@ -27,21 +28,27 @@ end
 # Testing DFS
 Test.@testset "DFS" begin
     # Set up
-    graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/rectangular_4x4_1-16-1_0.gr"
+    # graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/rectangular_4x4_1-16-1_0.gr"
     # graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/test.gr"
     # graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/sycamore_53_20_0.gr" # very big
+    graph_file = "circuit_graphs/qflex_line_graph_files_decomposed_true_hyper_true/sycamore_53_8_0.gr" # very big
     G = VertexEliminationOrder.graph_from_gr(graph_file) 
 
     # min fill test
-    seconds = 1
+    seconds = 5.0
     println("Max alg duration: ", seconds, " seconds")
-    @BT.time r = branch_bound(G, seconds)
+    @time r = branch_bound(G, seconds, 10)
+    # @PV.profview r = branch_bound(G, seconds)
 
-    println("Upper bound: ",r.ub)
-    println("Best order: ",r.best_order)
-    println("Timed out: ",r.timeout)
-    println("Number of nodes visited: ",r.numNodes)
+    println("Upper bound: ", r.ub)
+    println("Best order: ", r.best_order)
+    println("Timed out: ", r.timeout)
+    println("Number of nodes visited: ", r.numNodes)
     println("Graph: ", r.g)
-
+    
+    # Checking to see if the function returns something
     Test.@test r !== nothing
+
+    # Checking to see if the best order has unique values
+    Test.@test length(unique(r.best_order)) == length(r.best_order)
 end 

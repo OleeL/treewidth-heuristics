@@ -10,7 +10,7 @@ end
 
 # joins vertices together if they're already neighbors
 @inline function joinVerts!(g::LG.AbstractGraph, v::Int)::GraphModification
-    nb = LG.neighbors(g, v)
+    nb = copy(LG.neighbors(g, v))
     numberOfNeighbors = length(nb)
     addedEdges = []
     for i = 1:numberOfNeighbors-1
